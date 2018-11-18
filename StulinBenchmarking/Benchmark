@@ -1,0 +1,152 @@
+class Benchmark {
+    var stringList = [String]()
+    let chars = Array("abcdefghijklmnopqrstuvwxyz".characters)
+    
+    let maxSize:Int
+    let numberGets:Int
+    let numberPuts:Int
+    
+    init(max: Int) {
+        maxSize = max
+        numberGets = max
+        numberPuts = max
+    }
+    
+    
+    var startTaskms: Int64 = 0
+    var endTaskms: Int64 = 0
+    
+    func startTimer() {
+        startTaskms = getCurrentMillis()
+    }
+    func stopTimer() {
+        endTaskms = getCurrentMillis()
+    }
+    func elapsedTimems() -> Int {
+        return Int(endTaskms - startTaskms)
+    }
+    func elapsedTimeTenths() -> Int {
+        return elapsedTimems() / 100
+    }
+    func elapsedTimeSeconds() -> Int {
+        return elapsedTimems() / 1000
+    }
+    func message(mess: String) {
+        if elapsedTimems() >= 1000 { print("\(mess)took \(elapsedTimeSeconds()) seconds") }
+        else { print("\(mess)took \(elapsedTimems()) milliseconds") }
+    }
+    
+    func makeString(length: Int) -> String {
+        var s = ""
+        let numberChars = chars.count
+        for _ in 0..<length {
+            s.append(chars[getRandomInt(range: numberChars)])
+        }
+        return s
+    }
+    
+    func makeStringList(size: Int) {
+        stringList = [String]()
+        for _ in 0..<size {
+            stringList.append(makeString(length: 10))
+        }
+    }
+    
+    func benchmark(mapType: Maps) -> Bool {
+        makeStringList(size: maxSize)
+        print("String List Complete")
+        let map: AbstractMap<String, String>
+        var setCollisions = 0
+        switch mapType {
+            case .linear: map = LinearMap<String, String>()
+            case .binary: map = BinaryMap<String, String>()
+            case .hash: map = HashMap<String, String>(initialArraySize: maxSize * 10)
+            default: return false
+        }
+        
+        //Set
+        startTimer()
+        for i in 0..<numberPuts {
+            map[stringList[i]] = stringList[i]
+        }
+        stopTimer()
+        message(mess: "\(numberPuts) set operations ")
+        if mapType == .hash {
+            setCollisions = map.getNumberCollisions()
+            print("Number of Collisions: \(setCollisions)")
+        }
+        
+        // Binary Set 2
+        if mapType == .binary {
+            startTimer()
+            for i in 0..<numberPuts {
+                map[stringList[i]] = stringList[i]
+            }
+            stopTimer()
+            message(mess: "\(numberPuts) resetting operations ")
+        }
+        
+        //Get
+        startTimer()
+        for _ in 0..<numberGets {
+            let index = getRandomInt(range: numberPuts)
+            let key = stringList[index]
+            let value = map[key]!
+            if value != key {
+                return false
+            }
+        }
+        stopTimer()
+        message(mess: "\(numberGets) get operations ")
+        let getCollisions = map.getNumberCollisions() - setCollisions
+        print("Number of Collisions: \(getCollisions)")
+       
+        if mapType == .hash {
+            print("\nMany Collisions:")
+            let map = HashMap<String, String>(initialArraySize: Int(maxSize / 2))
+            //Set
+            startTimer()
+            for i in 0..<numberPuts {
+                map[stringList[i]] = stringList[i]
+            }
+            stopTimer()
+            message(mess: "Collisions: \(numberPuts) set operations ")
+            setCollisions = map.getNumberCollisions()
+            print("Number of Collisions: \(setCollisions)")
+            //Get
+            startTimer()
+            for _ in 0..<numberGets {
+                let index = getRandomInt(range: numberPuts)
+                let key = stringList[index]
+                let value = map[key]!
+                if value != key {
+                    return false
+                }
+            }
+            stopTimer()
+            message(mess: "Collisions: \(numberGets) get operations ")
+            let getCollisions = map.getNumberCollisions() - setCollisions
+            print("Number of Collisions: \(getCollisions)")
+            
+        }
+        return true
+    }
+    
+    
+ 
+}
+
+func doBenchmark() {
+    print("Lets go!\n")
+    let mapTypes: [Maps] = [.linear, .binary, .hash]
+    for i in 5..<22 {
+        let b = Benchmark(max: Int(pow(2.0, Double(i))))
+        print("Power of 2: \(i)")
+        for t in mapTypes {
+            print("\(t.rawValue)")
+            if b.benchmark(mapType: t) { print("map good") }
+            else { print("map bad") }
+            print("\n")
+        }
+    }
+}
