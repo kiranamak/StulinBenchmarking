@@ -1,0 +1,23 @@
+class AbstractMap<K, V>: CustomStringConvertible {
+    
+    var count: Int { return 0 }
+    let type: Maps
+    init(type: Maps) {
+        self.type = type
+    }
+    func getNumberCollisions() -> Int { return 0 }
+    func set(_ k: K, _ v: V) { return }
+    func get(_ k: K) -> V? { return nil }
+    subscript(k: K) -> V? {
+        get { return nil }
+        set { return }
+    }
+    var description: String { return "Abstract Map Class - do not use" }
+}
+
+enum Maps: String {
+    case abstract
+    case linear = "Linear Map: "
+    case binary = "Binary Map: "
+    case hash = "Hash Map: "
+}
